@@ -101,6 +101,33 @@ for (const file of SCRIPTS) {
     for (const name of real) assert.ok(matches(automatic, name), name);
     for (const name of fake) assert.ok(!matches(automatic, name), name);
   });
+  test(`${file}: support, subscription reminders and TG notices excluded on all node sources`, () => {
+    const fake = [
+      '客服邮箱：support@example.com', '客服邮箱: support@example.com',
+      '⚠️节点不通请更新订阅', '节点不通请刷新订阅',
+      '💬 TG交流群 | @example', '📣 TG频道 | @example',
+      'Telegram 群组：@example', 'tg频道｜@example'
+    ];
+    const real = ['🇹🇷 土耳其 | 三网优化', '香港01｜不限流量', '香港 TG 专线 01', '美国 Telegram 优化 02', 'NRT Channel Premium', 'ATG频道优化 01'];
+    for (const source of ['inline', 'provider', 'mixed']) {
+      const input = source === 'inline' ? {} : fixture('provider-only');
+      if (source !== 'provider') input.proxies = [...real, ...fake].map(name => ({name, type: 'ss'}));
+      const c = execute(file, input);
+      const manual = c['proxy-groups'].find(g => g.name === '全球手动');
+      if (source !== 'provider') {
+        for (const name of real) assert.ok(manual.proxies.includes(name), `${source}: keep ${name}`);
+        for (const name of fake) assert.ok(!manual.proxies.includes(name), `${source}: exclude ${name}`);
+      } else {
+        for (const name of real) assert.ok(matches(manual, name), `${source}: keep ${name}`);
+      }
+      for (const group of c['proxy-groups'].filter(g => g['exclude-filter'])) {
+        for (const name of fake) assert.ok(!matches(group, name), `${source}/${group.name}: exclude ${name}`);
+      }
+      const automatic = c['proxy-groups'].find(g => g.name === '自动选择');
+      for (const name of real) assert.ok(matches(automatic, name), `${source}: keep ${name}`);
+      assert.ok(matches(c['proxy-groups'].find(g => g.name === '其他地区'), real[0]), 'Turkey route remains selectable');
+    }
+  });
   test(`${file}: custom patches preserve LAN and AI priority`, () => {
     const c = execute(file, fixture('direct-proxies'));
     const index = name => c.rules.findIndex(rule => rule.startsWith('RULE-SET,' + name + ','));

@@ -11,6 +11,11 @@ for (const script of SCRIPTS) {
     input.dns = {'fake-ip-filter-mode': mode, 'fake-ip-filter': ['+.airport.example']};
     cases.push({script, label: 'dns-' + mode, input});
   }
+  cases.push({script, label: 'information-notices', input: {proxies: [
+    '客服邮箱：support@example.com', '⚠️节点不通请更新订阅',
+    '💬 TG交流群 | @example', '📣 TG频道 | @example',
+    '🇹🇷 土耳其 | 三网优化', '香港 TG 专线 01'
+  ].map(name => ({name, type: 'ss'}))}});
   cases.push({script, label: 'empty', input: {}});
 }
 const services = ['ChatGPT', 'Claude', 'Gemini / NotebookLM', 'Google', 'GitHub', 'Microsoft', 'Apple', 'Telegram', 'X', 'YouTube', 'Netflix', '游戏平台', '地区分组'];
