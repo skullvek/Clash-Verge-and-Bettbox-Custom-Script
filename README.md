@@ -9,7 +9,7 @@
 [![Clash Verge Rev](https://img.shields.io/badge/Clash%20Verge%20Rev-支持-2f81f7)](./Clash-Verge-Rev-mihomoScript.js)
 [![Bettbox](https://img.shields.io/badge/Bettbox%20Android-v1.18.8%2B-3ddc84)](./Bettbox-mihomoScript.js)
 [![Mihomo](https://img.shields.io/badge/内核-Mihomo-orange)](https://github.com/MetaCubeX/mihomo)
-[![Validate scripts](https://github.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml/badge.svg)](https://github.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml)
+[![Validate scripts](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml/badge.svg)](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml)
 
 [快速开始](#快速开始) · [仓库目录](#仓库目录与日常维护) · [代理组架构](#代理组架构) · [分流规则](#分流规则) · [DNS](#dns-设计) · [客户端差异](#两版脚本差异) · [常见问题](#注意事项)
 
@@ -44,6 +44,17 @@
 | DNS | 国内查询直连；默认国外查询经 `国外流量`；提供独立 `direct-nameserver` |
 | 兼容性 | 自动保留真正被节点、provider、listener、tunnel、NTP 等引用的旧策略组依赖 |
 | Bettbox | v1.18.8+ 提供 13 个可视化覆写开关 |
+| TUN 管理 | Clash Verge Rev 仅补齐缺失的 TUN 默认项；Bettbox 的 VPN / TUN 由 App 管理 |
+
+### 最近维护
+
+| 日期 | 变更 |
+| --- | --- |
+| 2026-10-15 | 优化两端伪节点过滤，排除客服邮箱、订阅更新提示与明确的 TG / Telegram 群组和频道公告；避免误排真实的 TG 专线节点。 |
+| 2026-10-04 | Bettbox 对 `pool.ntp.org` 及其子域名、UDP 目标端口 123 增加直连规则，并为 NTP 域名指定国内 DNS；不按 OPPO 等系统应用的包名整体放行。 |
+| 2026-10-02 | 引入 `rules/` 自维护域名补丁、节点地区识别增强，以及 Node / QuickJS 自动回归测试与 GitHub Actions。 |
+
+上述是仓库提交日期；脚本顶部的版本标识仍分别为 `2026.10.02-r1`（Clash Verge Rev）和 `2026.10.04-r1`（Bettbox），并非每次补丁提交都修改版本标识。
 
 ## 仓库目录与日常维护
 
@@ -100,8 +111,8 @@
 ### Raw 地址
 
 ```text
-https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/Clash-Verge-Rev-mihomoScript.js
-https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/Bettbox-mihomoScript.js
+https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/Clash-Verge-Rev-mihomoScript.js
+https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/Bettbox-mihomoScript.js
 ```
 
 > Raw 地址适合复制或同步脚本源码。脚本更新后，需要重新加载 / 刷新对应覆写，客户端才会使用新版本。
@@ -392,7 +403,12 @@ api.example.net
 
 `CustomDirect` / `CustomProxy` 同时接入 DNS policy，分别使用国内 DoH 直连和境外 DoH 经 `国外流量`，并先于通用 CN 分类；AI DNS 仍优先跟随对应 AI 组。
 
-补丁更新只需修改 `rules/*.list`，两份 JS 无需重复修改。提交后等待内核下一轮更新，或在客户端执行规则集更新；**这不是即时推送**。本仓库已将三个文件发布到 `main`。如果将脚本迁移到自己的仓库，应同时发布规则文件并修改两份 JS 中的 `CUSTOM_RULE_BASE`；只复制 JS 不会自动改为读取自己的补丁。已有缓存时保留最近成功下载的内容；远端不可达且无缓存时，补丁不能生效。
+在运行时规则 URL 正确指向本仓库的前提下，补丁内容更新只需修改 `rules/*.list`，无需调整分流脚本逻辑。提交后等待内核下一轮更新，或在客户端执行规则集更新；**这不是即时推送**。已有缓存时保留最近成功下载的内容；远端不可达且无缓存时，补丁不能生效。
+
+> [!IMPORTANT]
+> **仓库地址迁移注意：** 当前两份 JS 的 `CUSTOM_RULE_BASE` 仍指向旧账号路径 `https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/rules/`，而当前仓库地址是 `skullvek/Clash-Verge-and-Bettbox-Custom-Script`。本文档入口已使用新地址，但**只更新 README 不会改变运行时规则下载 URL**。如果规则更新失败，或编辑本仓库的 `rules/*.list` 后未生效，请先检查最终配置中 `SKULL_CustomDirect`、`SKULL_CustomProxy`、`SKULL_FakeIPFilter` 的 `url` 及下载日志。迁移运行时 URL 需要同步修改两份 JS 的 `CUSTOM_RULE_BASE` 和相关测试断言；不要仅修改 README。
+
+如将脚本迁移到其他仓库，也应同时发布规则文件并修改两份 JS 中的 `CUSTOM_RULE_BASE`；只复制 JS 不会自动改为读取新位置的补丁。
 
 ### 上游域名规则（两版均为 25 个）
 
@@ -607,6 +623,8 @@ dns-hijack:
 
 > TUN 相关字段最终仍受 Clash Verge Rev 客户端设置控制。脚本只为缺失项补默认值，不强行覆盖用户已经明确设置的值。
 
+**TUN 模式下的 DNS 泄露排查：** 若开启 TUN 后 DNS 检测仍显示意外的本地解析器，先检查 Clash Verge Rev 的「TUN 模式 / 严格路由」选项及**最终生效配置**中的 `tun.strict-route`、`tun.auto-route`、`tun.dns-hijack`。当客户端明确写入 `strict-route: false` 时，脚本中的默认 `true` 不会替用户覆盖它。在 Windows 上开启严格路由有助于限制 DNS 请求绕过 TUN，但结果仍可能受到浏览器安全 DNS（DoH）、IPv6、操作系统及其他网络软件影响，不能据此承诺绝对无 DNS 泄露。
+
 ### Bettbox
 
 ```yaml
@@ -718,6 +736,28 @@ JavaScript 排序只能直接处理 `config.proxies` 中已经展开的节点。
 </details>
 
 <details>
+<summary><b>为什么 Clash Verge Rev 开启 TUN 后仍可能发生 DNS 泄露，打开严格路由又恢复正常？</b></summary>
+
+脚本设置的 `dns.respect-rules: true`、`tun.dns-hijack` 和 `tun.strict-route` 默认值不能代替客户端的实际系统路由。Clash Verge Rev 的 TUN 设置可能在扩展脚本执行之后生效；若客户端关闭严格路由，部分系统 DNS 请求可能绕过 TUN，因此外部测试仍看到非预期解析器。打开严格路由后，这些请求更有可能遵循 TUN 路由，检测结果因而改善。
+
+建议按以下顺序检查：
+
+1. 在 Clash Verge Rev 的 TUN 设置中开启**严格路由**，确认 TUN 已启用，且最终配置中 `strict-route: true`。
+2. 检查最终 `tun.dns-hijack` 包含 `any:53` / `tcp://any:53`，并确认脚本的 `dns` 段没有被其他覆写覆盖。
+3. 在相同节点、相同浏览器和网络环境下重新进行 DNS 泄露测试；必要时排查浏览器独立 DoH、IPv6 和其他 VPN / 网络过滤软件。
+
+DNS 检测出现国内 DNS **不一定**代表泄露：本项目有意让国内域名、直连业务与代理服务器域名使用直连 DNS。应结合被查询域名、预期策略和实际请求出口判断。严格路由有助于降低绕行风险，但不保证覆盖所有应用的加密 DNS。
+
+</details>
+
+<details>
+<summary><b>为什么 Bettbox 中部分 OPPO 系统应用仍显示使用代理？</b></summary>
+
+Bettbox 当前只对 `pool.ntp.org`（含子域名）和 UDP 目标端口 123 的校时流量增加前置直连，不会按「手机管家」「云服务」「健康」「应用商店」等应用名称或包名整体直连。其他连接仍按域名、IP 与通用分流规则判定；如存在误判，应根据脱敏后的目标域名、连接规则和日志排查，避免大范围直连绕过必要的代理约束。
+
+</details>
+
+<details>
 <summary><b>IPv6 为什么被关闭？</b></summary>
 
 DNS 层两版均设置 `ipv6: false`；Bettbox 另外设置顶层 `ipv6: false`。这是为了避免在无完整 IPv6 代理/路由能力的网络中返回不可用 AAAA 结果。
@@ -751,13 +791,14 @@ python tests/quickjs_check.py
 
 ## 问题反馈
 
-如果遇到脚本不生效、节点分类错误、规则命中异常或 DNS 行为异常，可通过 [GitHub Issues](https://github.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/issues) 反馈。
+如果遇到脚本不生效、节点分类错误、规则命中异常或 DNS 行为异常，可通过 [GitHub Issues](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/issues) 反馈。
 
 建议同时提供：
 
 - 客户端名称与版本
 - Mihomo 内核版本
 - 当前脚本版本
+- TUN / 严格路由、DNS 覆写及浏览器安全 DNS 等相关开关状态（如适用）
 - 相关日志中的 `[SKULL]` 告警
 - 已脱敏的配置片段或节点名称示例
 
