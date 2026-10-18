@@ -24,6 +24,7 @@ jobs:
         run: |
           node --check Clash-Verge-Rev-mihomoScript.js
           node --check Bettbox-mihomoScript.js
+          node --check FlClash-mihomoScript.js
       - name: Validate behavior, references and rule files
         run: node --test tests/validate.js
       - name: Install real QuickJS engine

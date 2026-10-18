@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const ROOT = path.resolve(__dirname, '..');
-const SCRIPTS = ['Clash-Verge-Rev-mihomoScript.js', 'Bettbox-mihomoScript.js'];
+const SCRIPTS = ['Clash-Verge-Rev-mihomoScript.js', 'Bettbox-mihomoScript.js', 'FlClash-mihomoScript.js'];
 function fixture(name) {
   return JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', name + '.json'), 'utf8'));
 }

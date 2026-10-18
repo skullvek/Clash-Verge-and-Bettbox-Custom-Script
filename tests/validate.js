@@ -140,7 +140,8 @@ for (const file of SCRIPTS) {
     for (const [name, leaf] of [['SKULL_CustomDirect', 'direct.list'], ['SKULL_CustomProxy', 'proxy.list'], ['SKULL_FakeIPFilter', 'fake-ip-filter.list']]) {
       const p = c['rule-providers'][name];
       assert.equal(p.behavior, 'domain'); assert.equal(p.format, 'text');
-      assert.equal(p.url, 'https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/rules/' + leaf);
+      const owner = file.startsWith('FlClash') ? 'skullvek' : 'hh1848';
+      assert.equal(p.url, `https://raw.githubusercontent.com/${owner}/Clash-Verge-and-Bettbox-Custom-Script/main/rules/` + leaf);
       assert.equal(p.proxy, '国外流量');
     }
   });
@@ -170,33 +171,71 @@ for (const file of SCRIPTS) {
     assert.equal(health['expected-status'], undefined);
   });
 }
-test('Bettbox: NTP routing overrides foreign classification after AI protection', () => {
-  for (const name of ['direct-proxies', 'provider-only', 'mixed-provider']) {
-    const c = execute(SCRIPTS[1], fixture(name));
-    const ntpDomain = c.rules.indexOf('DOMAIN-SUFFIX,pool.ntp.org,DIRECT');
-    const ntpPort = c.rules.indexOf('AND,((NETWORK,UDP),(DST-PORT,123)),DIRECT');
-    const foreign = c.rules.indexOf('RULE-SET,SKULL_Foreign,国外流量');
-    assert.ok(ntpDomain >= 0, 'pool.ntp.org and its subdomains must have a direct route');
-    assert.ok(ntpPort >= 0, 'UDP/123 must have a direct route even without a hostname');
-    for (const provider of ['SKULL_OpenAI', 'SKULL_Claude', 'SKULL_Gemini']) {
-      const ai = c.rules.findIndex(rule => rule.startsWith('RULE-SET,' + provider + ','));
-      assert.ok(ai < ntpDomain && ai < ntpPort, provider + ': AI protection must win');
+for (const file of SCRIPTS.slice(1)) {
+  test(`${file}: NTP routing overrides foreign classification after AI protection`, () => {
+    for (const name of ['direct-proxies', 'provider-only', 'mixed-provider']) {
+      const c = execute(file, fixture(name));
+      const ntpDomain = c.rules.indexOf('DOMAIN-SUFFIX,pool.ntp.org,DIRECT');
+      const ntpPort = c.rules.indexOf('AND,((NETWORK,UDP),(DST-PORT,123)),DIRECT');
+      const foreign = c.rules.indexOf('RULE-SET,SKULL_Foreign,国外流量');
+      assert.ok(ntpDomain >= 0, 'pool.ntp.org and its subdomains must have a direct route');
+      assert.ok(ntpPort >= 0, 'UDP/123 must have a direct route even without a hostname');
+      for (const provider of ['SKULL_OpenAI', 'SKULL_Claude', 'SKULL_Gemini']) {
+        const ai = c.rules.findIndex(rule => rule.startsWith('RULE-SET,' + provider + ','));
+        assert.ok(ai < ntpDomain && ai < ntpPort, provider + ': AI protection must win');
+      }
+      assert.ok(ntpDomain < foreign && ntpPort < foreign, 'NTP must precede foreign domains');
+      assert.ok(!c.rules.includes('DST-PORT,123,DIRECT'), 'TCP/123 must not be bypassed');
+      assert.ok(!c.rules.includes('NETWORK,UDP,DIRECT'), 'other UDP traffic must keep normal routing');
     }
-    assert.ok(ntpDomain < foreign && ntpPort < foreign, 'NTP must precede foreign domains');
-    assert.ok(!c.rules.includes('DST-PORT,123,DIRECT'), 'TCP/123 must not be bypassed');
-    assert.ok(!c.rules.includes('NETWORK,UDP,DIRECT'), 'other UDP traffic must keep normal routing');
+  });
+  test(`${file}: NTP DNS uses domestic direct resolvers with real IP compatibility`, () => {
+    const c = execute(file, fixture('provider-only'));
+    assert.deepEqual(c.dns['nameserver-policy']['+.pool.ntp.org'], [
+      'https://dns.alidns.com/dns-query#DIRECT',
+      'https://doh.pub/dns-query#DIRECT'
+    ]);
+    assert.ok(c.dns['fake-ip-filter'].includes('+.pool.ntp.org'));
+    assert.ok(c.dns.nameserver.every(url => url.endsWith('#国外流量')));
+  });
+}
+test('FlClash: defaults inherit Bettbox routing with current-repository patches', () => {
+  for (const name of ['direct-proxies', 'provider-only', 'mixed-provider']) {
+    const bettbox = execute(SCRIPTS[1], fixture(name));
+    const flclash = execute(SCRIPTS[2], fixture(name), {noFromEntries: true});
+    assert.deepEqual(flclash['proxy-groups'], bettbox['proxy-groups']);
+    assert.deepEqual(flclash.rules, bettbox.rules);
+    assert.equal(flclash.rules.length, 41);
+    for (const provider of Object.values(bettbox['rule-providers'])) {
+      if (provider.url) provider.url = provider.url.replace('/hh1848/', '/skullvek/');
+    }
+    assert.deepEqual(flclash['rule-providers'], bettbox['rule-providers']);
+    assert.deepEqual(flclash.dns['nameserver-policy'], bettbox.dns['nameserver-policy']);
+    assert.equal(flclash.dns['direct-nameserver-follow-policy'], true);
+    for (const domain of ['+.msftconnecttest.com', '+.msftncsi.com']) {
+      assert.ok(flclash.dns['fake-ip-filter'].includes(domain));
+    }
   }
 });
-test('Bettbox: NTP DNS uses domestic direct resolvers with real IP compatibility', () => {
-  const c = execute(SCRIPTS[1], fixture('provider-only'));
-  assert.deepEqual(c.dns['nameserver-policy']['+.pool.ntp.org'], [
-    'https://dns.alidns.com/dns-query#DIRECT',
-    'https://doh.pub/dns-query#DIRECT'
-  ]);
-  assert.ok(c.dns['fake-ip-filter'].includes('+.pool.ntp.org'));
-  assert.ok(c.dns.nameserver.every(url => url.endsWith('#国外流量')));
+test('FlClash: client-owned settings are preserved without inventing defaults', () => {
+  const fields = ['tun', 'mode', 'ipv6', 'unified-delay', 'tcp-concurrent', 'find-process-mode'];
+  const input = fixture('direct-proxies');
+  Object.assign(input, {tun: {enable: false, stack: 'system', 'strict-route': false},
+    mode: 'global', ipv6: true, 'unified-delay': false, 'tcp-concurrent': false, 'find-process-mode': 'strict',
+    profile: {'store-selected': false, custom: true}});
+  const output = execute(SCRIPTS[2], input);
+  for (const key of fields) assert.deepEqual(output[key], input[key], key);
+  assert.deepEqual(output.profile, {...input.profile, 'store-fake-ip': true});
+  for (const key of fields) delete input[key];
+  delete input.profile;
+  const clean = execute(SCRIPTS[2], input);
+  for (const key of fields) assert.ok(!Object.hasOwn(clean, key), key);
+  assert.ok(!Object.hasOwn(clean.profile, 'store-selected'));
+  assert.equal(clean.dns.enable, true);
+  assert.ok(!clean.dns.nameserver.some(url => url.startsWith('system')));
+  assert.deepEqual(clean.dns['nameserver-policy']['rule-set:SKULL_Lan'], ['system']);
 });
-test('two platforms: defaults agree except Bettbox system NTP direct routes', () => {
+test('Clash Verge / Bettbox: defaults agree except system NTP direct routes', () => {
   for (const name of ['direct-proxies', 'provider-only', 'mixed-provider']) {
     const a = execute(SCRIPTS[0], fixture(name));
     const b = execute(SCRIPTS[1], fixture(name));
