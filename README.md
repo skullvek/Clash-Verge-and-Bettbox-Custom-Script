@@ -64,7 +64,7 @@
 | --- | --- | --- |
 | [`Clash-Verge-Rev-mihomoScript.js`](./Clash-Verge-Rev-mihomoScript.js) | 桌面端覆写入口 | 将全文放入 Clash Verge Rev 全局扩展脚本 |
 | [`Bettbox-mihomoScript.js`](./Bettbox-mihomoScript.js) | Android 端覆写入口 | 将全文放入 Bettbox 脚本覆写 |
-| [`FlClash-mihomoScript.js`](./FlClash-mihomoScript.js) | FlClash 多平台扩展入口 | 新建脚本后在当前订阅的扩展 / 覆写中选中 |
+| [`FlClash-mihomoScript.js`](./FlClash-mihomoScript.js) | FlClash 多平台扩展入口 | 从脚本管理导入后，在机场订阅的「扩展 → 脚本」中选中 |
 | [`rules/`](./rules/) | 自维护的直连、代理与 Fake-IP 补丁 | Mihomo 自动下载；需要修正域名时编辑对应 `.list` 文件 |
 | [`.github/`](./.github/workflows/validate.yml) | GitHub Actions 自动验证配置 | 每次提交自动运行，无需导入客户端 |
 | [`tests/`](./tests/) | 示例订阅与脚本回归测试 | 修改脚本时验证行为，无需导入客户端 |
@@ -84,7 +84,7 @@
 
 ### 选择对应脚本
 
-| 客户端 | 平台 | 当前版本 | 脚本 |
+| 客户端 | 平台 | 脚本版本 | 脚本 |
 | --- | --- | --- | --- |
 | **Clash Verge Rev** | Windows / macOS / Linux | `2026.10.02-r1` | [`Clash-Verge-Rev-mihomoScript.js`](./Clash-Verge-Rev-mihomoScript.js) |
 | **Bettbox** | Android | `2026.10.04-r1` | [`Bettbox-mihomoScript.js`](./Bettbox-mihomoScript.js) |
@@ -114,19 +114,30 @@
 
 ### FlClash
 
-按官方 **v0.9.1** 的 `main(config)` 接口及配置处理顺序适配；旧版菜单可能使用“覆写”命名。
+按官方 **v0.9.1** 的 `main(config)` 接口及配置处理顺序适配。v0.9.0 已移除旧的「自定义覆写」并新增「自定义配置」，扩展脚本仍通过订阅的「扩展 → 脚本」绑定；旧版菜单可能使用「覆写」命名。详见官方 [v0.9.0 更新说明](https://github.com/chen08209/FlClash/releases/tag/v0.9.0)。
 
-1. 正常导入并选中机场订阅，客户端运行模式选择 **规则**。
-2. 打开当前订阅的 **扩展 / 覆写**，将扩展模式切换为 **脚本**。
-3. 点击 **前往配置脚本**，新建脚本并粘贴 [`FlClash-mihomoScript.js`](./FlClash-mihomoScript.js) 全文保存；也可在脚本管理中通过下方 Raw URL 导入。
-4. 返回订阅的脚本列表，**选中刚保存的脚本**，返回后重新应用配置。只保存脚本、未绑定订阅不会生效。
-5. 关闭全局及当前订阅中的 **DNS 覆写**。v0.9.1 按字段覆写，请取消 DNS 字段的覆写选择，避免覆盖脚本生成的上游、policy 与 Fake-IP 设置。
-6. 在网络设置中关闭 **追加系统 DNS**；否则 FlClash 会在脚本之后把 `system://` 加入默认 `nameserver`，使国外域名也可能通过系统 DNS 查询。LAN 专用的 `system` policy 保留，服务于局域网解析。
-7. 代理页应显示 25 个主策略组，另有 9 个隐藏地区测速组；首次加载检查 Microsoft、Apple、游戏平台是否选中 `DIRECT`。若当前订阅已经保存过选择，客户端会优先恢复它。
+> [!IMPORTANT]
+> **JS 脚本需要绑定到已有机场订阅。** 新版「自定义配置」页面中，带有「规则 / 外部资源 / DNS / 更多」和右上角「导入」按钮的入口用于导入完整 YAML 配置；将本脚本放到那里会提示「此文件不是可导入的配置」。请按下面的脚本入口操作。
+
+1. 正常导入并选中机场订阅，客户端运行模式选择 **规则**。本仓库脚本处理订阅提供的节点，不单独提供节点。
+2. 回到 **配置列表**，Android 长按机场订阅卡片打开菜单，选择 **扩展**；桌面端可右键打开菜单。操作对象是已有的机场订阅。
+3. 将 **扩展模式**切换为 **脚本**，点击 **前往配置脚本**。
+4. 在标题为 **脚本** 的管理页面，点击右上角 **＋ → 通过URL导入**，粘贴下面的地址；也可选择「通过文件导入」，或选择「从零开始」后粘贴 [`FlClash-mihomoScript.js`](./FlClash-mihomoScript.js) 全文保存。
+
+   ```text
+   https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/FlClash-mihomoScript.js
+   ```
+
+5. 导入完成后，返回该订阅的扩展页面，**选中刚保存的脚本**，确认其显示选中状态，再返回并重新应用配置。只保存脚本、未绑定订阅不会生效。
+6. 检查 **DNS 字段覆写**：v0.9.0 起已移除旧的 DNS 总覆写开关，改为按选中字段应用；要完整采用脚本的 DNS 策略，应取消客户端中已选的 DNS 覆写字段，避免重写上游、policy、fallback 与 Fake-IP 设置。这里是取消字段覆写，**保留脚本生成的 `dns.enable: true`**。旧版仍有 DNS 覆写总开关时，关闭该覆写开关。
+7. 在 **进阶配置 → 网络** 中关闭 **追加系统 DNS**；否则 FlClash 会在脚本之后把 `system://` 加入默认 `nameserver`，使国外域名也可能通过系统 DNS 查询。LAN 专用的 `system` policy 保留，服务于局域网解析。
+8. 代理页应显示 25 个主策略组，另有 9 个隐藏地区测速组；首次加载检查 Microsoft、Apple、游戏平台是否选中 `DIRECT`。若当前订阅已经保存过选择，客户端会优先恢复它。
 
 FlClash 不读取 Bettbox 的 13 个可视化开关，因此此版本固定启用全部服务组和地区组。TUN / Android VPN、运行模式、顶层 IPv6 与进程识别由客户端设置控制；没有完整 IPv6 代理链路时，在 App 中关闭 IPv6。桌面 TUN 的严格路由请在客户端中设置并检查最终配置。
 
-官方实现依据：[脚本执行器](https://github.com/chen08209/FlClash/blob/v0.9.1/plugins/rust_api/rust/src/script/mod.rs)、[配置后处理](https://github.com/chen08209/FlClash/blob/v0.9.1/lib/common/task.dart)、[订阅脚本绑定](https://github.com/chen08209/FlClash/blob/v0.9.1/lib/views/profiles/extend/script.dart)。自动测试覆盖脚本逻辑与 QuickJS；设备上的真实节点、规则下载及 VPN 行为仍需实际确认。
+脚本管理也可从 **进阶配置 → 脚本** 打开；导入后仍需完成第 5 步的订阅绑定。出现下载错误、配置格式提示或保存后不生效时，见下方[导入排查](#flclash-导入排查)。
+
+官方实现依据：[脚本管理与导入](https://github.com/chen08209/FlClash/blob/v0.9.1/lib/views/config/scripts.dart)、[订阅脚本绑定](https://github.com/chen08209/FlClash/blob/v0.9.1/lib/views/profiles/extend/script.dart)、[脚本执行器](https://github.com/chen08209/FlClash/blob/v0.9.1/plugins/rust_api/rust/src/script/mod.rs)、[配置后处理](https://github.com/chen08209/FlClash/blob/v0.9.1/lib/common/task.dart)。自动测试覆盖脚本逻辑与 QuickJS；设备上的真实节点、规则下载及 VPN 行为仍需实际确认。
 
 ### Raw 地址
 
@@ -522,7 +533,7 @@ fake-ip-filter-mode: blacklist
 > [!WARNING]
 > **Bettbox 请关闭 App 内的「DNS 覆写」后再使用本节策略。** Bettbox 会在脚本执行后继续应用客户端设置；一旦开启 DNS 覆写，整段 `dns` 会被客户端重新生成，脚本中的 `nameserver-policy`、`direct-nameserver` 等设置将不再生效。
 
-FlClash 也需关闭 DNS 覆写或取消 DNS 字段覆写，并关闭“追加系统 DNS”，详见[快速开始](#flclash)。Bettbox / FlClash 使用 `direct-nameserver-follow-policy: true`，让 LAN 等明确 policy 继续控制直连解析；Clash Verge Rev 保持 `false`。
+FlClash v0.9.0+ 应取消已选的 DNS 覆写字段，并关闭“追加系统 DNS”；保留脚本生成的 `dns.enable: true`。旧版有 DNS 总覆写开关时关闭该覆写开关，详见[快速开始](#flclash)。Bettbox / FlClash 使用 `direct-nameserver-follow-policy: true`，让 LAN 等明确 policy 继续控制直连解析；Clash Verge Rev 保持 `false`。
 
 ### Fake-IP Filter
 
@@ -715,6 +726,19 @@ Netflix IP 规则 → 国外流量
 ---
 
 ## 注意事项
+
+### FlClash 导入排查
+
+| 现象 | 对应环节 | 处理方法 |
+| --- | --- | --- |
+| 提示「此文件不是可导入的配置」，页面有「规则 / 外部资源 / DNS / 更多」 | 自定义配置导入按 YAML 校验内容；JS 放入该入口会被拒绝 | 返回配置列表，在机场订阅的「扩展 → 脚本 → 前往配置脚本」中，通过URL或文件导入 JS，再返回选中它 |
+| 长按卡片后没有「扩展」选项 | 当前卡片可能是「自定义配置」，而非机场订阅 / 文件配置 | 找到正常提供节点的机场订阅卡片，或先导入机场订阅，再绑定脚本 |
+| 提示 HTTP 404、下载失败或内容为空 | 下载地址或下载网络需要检查；不能仅凭此判断脚本兼容性 | 用同一设备的浏览器打开 Raw 地址，确认能看到 `function main(config)`；核对账号、分支、文件名和大小写，必要时换节点重试 |
+| 脚本已保存，但代理组没有变化 | 脚本可能未绑定、配置未重新应用，或订阅没有节点 | 在机场订阅的扩展页切换到「脚本」并选中它，重新应用配置；同时检查原订阅是否正常提供节点 |
+
+地址和浏览器内容均正常、App 仍无法下载时，可将 `.js` 下载到本地后，在 **脚本管理 → ＋ → 通过文件导入** 中加载，或使用「从零开始」粘贴全文。两种方式都需要回到订阅的扩展页选中脚本；以后更新脚本时需重新导入或替换内容。
+
+Raw 下载错误与配置格式校验是不同环节。若已出现「此文件不是可导入的配置」，先核对导入入口及实际下载内容；给 URL 增加参数不会把 JavaScript 变为完整 YAML 配置。
 
 <details>
 <summary><b>配置里没有任何节点会怎样？</b></summary>
