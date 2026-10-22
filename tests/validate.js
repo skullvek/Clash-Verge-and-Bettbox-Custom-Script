@@ -140,7 +140,7 @@ for (const file of SCRIPTS) {
     for (const [name, leaf] of [['SKULL_CustomDirect', 'direct.list'], ['SKULL_CustomProxy', 'proxy.list'], ['SKULL_FakeIPFilter', 'fake-ip-filter.list']]) {
       const p = c['rule-providers'][name];
       assert.equal(p.behavior, 'domain'); assert.equal(p.format, 'text');
-      assert.equal(p.url, 'https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/' + leaf);
+      assert.equal(p.url, 'https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/rules/' + leaf);
       assert.equal(p.proxy, '国外流量');
     }
   });
@@ -205,9 +205,6 @@ test('FlClash: defaults inherit Bettbox routing with current-repository patches'
     assert.deepEqual(flclash['proxy-groups'], bettbox['proxy-groups']);
     assert.deepEqual(flclash.rules, bettbox.rules);
     assert.equal(flclash.rules.length, 41);
-    for (const provider of Object.values(bettbox['rule-providers'])) {
-      if (provider.url) provider.url = provider.url.replace('/hh1848/', '/skullvek/');
-    }
     assert.deepEqual(flclash['rule-providers'], bettbox['rule-providers']);
     assert.deepEqual(flclash.dns['nameserver-policy'], bettbox.dns['nameserver-policy']);
     assert.equal(flclash.dns['direct-nameserver-follow-policy'], true);
@@ -273,7 +270,7 @@ test('self-maintained rule files match their domain/text provider declarations',
   const config = execute(SCRIPTS[0], fixture('direct-proxies'));
   const lists = {};
   for (const [name, p] of Object.entries(config['rule-providers'])) {
-    if (!p.url.startsWith('https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/')) continue;
+    if (!p.url.startsWith('https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/rules/')) continue;
     const relative = new URL(p.url).pathname.split('/main/')[1];
     assert.ok(relative && relative.startsWith('rules/'));
     const text = fs.readFileSync(path.join(ROOT, relative), 'utf8');
@@ -297,4 +294,47 @@ test('self-maintained rule files match their domain/text provider declarations',
       assert.ok(!conflict, `conflicting direct/proxy patches: ${direct} / ${proxy}`);
     }
   }
+});
+
+test('international patches cover overseas services without capturing domestic siblings or shared parents', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const {ROOT} = require('./helpers');
+  const read = leaf => fs.readFileSync(path.join(ROOT, 'rules', leaf), 'utf8')
+    .split(/\r?\n/).map(line => line.trim()).filter(line => line && !line.startsWith('#'));
+  const matchesHost = (host, entries) => entries.some(entry => entry.startsWith('+.')
+    ? host === entry.slice(2) || host.endsWith('.' + entry.slice(2))
+    : host === entry);
+  const proxy = read('proxy.list');
+  const direct = read('direct.list');
+  const overseas = [
+    'www.workbuddy.ai', 'www.codebuddy.ai', 'qoder.com', 'api1.qoder.sh',
+    'chat.qwen.ai', 'chat.qwenlm.ai', 'qwenlm.io', 'chat.z.ai', 'api.z.ai',
+    'api.minimax.io', 'api.moonshot.ai', 'solo.trae.ai', 'traeapi.us',
+    'trae-api-sg.mchost.guru', 'www.coze.com', 'cozecdn.com',
+    'www.larksuite.com', 'open.larksuite.com', 'larksuitecdn.com', 'larkoffice.com',
+    'www.wps.com', 'www.wpsoffice.com', 'voovmeeting.com', 'app.klingai.com',
+    'wetv.vip', 'iq.com', 'www.bilibili.tv', 'joox.com',
+    'video.tiktokrow-cdn.com', 'pikpakdrive.com', 'pikpak.me',
+    'www.alibabacloud.com', 'console.tencentcloud.com',
+    'dashscope-intl.aliyuncs.com', 'dashscope-us.aliyuncs.com',
+    'llm-example.ap-southeast-1.maas.aliyuncs.com',
+    'llm-example.ap-northeast-1.maas.aliyuncs.com'
+  ];
+  for (const host of overseas) {
+    assert.ok(matchesHost(host, proxy), host + ': overseas exception missing');
+    assert.ok(!matchesHost(host, direct), host + ': earlier direct patch must not win');
+  }
+  const unpatched = [
+    'workbuddy.cn', 'copilot.tencent.com', 'qoder.cn', 'trae.com.cn', 'coze.cn',
+    'chatglm.cn', 'open.bigmodel.cn', 'api.minimaxi.com', 'api.minimax.chat',
+    'api.moonshot.cn', 'www.kimi.com', 'www.wps.cn',
+    'mchost.guru', 'unrelated.mchost.guru', 'aliyuncs.com', 'oss-cn-beijing.aliyuncs.com',
+    'dashscope.aliyuncs.com', 'llm-example.cn-beijing.maas.aliyuncs.com',
+    'tencentcloudapi.com', 'cvm.tencentcloudapi.com', 'cloud.tencent.com',
+    'evilworkbuddy.ai', 'workbuddy.ai.example.com',
+    'not-ap-southeast-1.maas.aliyuncs.com', 'dashscope-intl.aliyuncs.com.example.com',
+    'sub.trae-api-sg.mchost.guru'
+  ];
+  for (const host of unpatched) assert.ok(!matchesHost(host, proxy), host + ': exception too broad');
 });

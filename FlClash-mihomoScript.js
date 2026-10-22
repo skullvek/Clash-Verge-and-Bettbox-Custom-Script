@@ -1,5 +1,5 @@
 // FlClash 扩展脚本（Android / Windows / macOS / Linux）
-// Version: 2026.10.18-r1
+// Version: 2026.10.22-r2
 // 目标：国内直连、国外代理；AI 强制代理；常用国际服务独立；地区聚合（自动测速 + 手动节点）。
 // 用法：新建脚本并粘贴全文；当前订阅 -> 扩展/覆写 -> 脚本，选中本脚本。
 // 在客户端使用规则模式，关闭 DNS 覆写及“追加系统 DNS”；TUN/VPN 由 FlClash 管理。
@@ -305,7 +305,7 @@ function main(config) {
   // 自维护的小型域名补丁：domain/text 同时支持分流和 DNS rule-set 引用。
   // 使用 Raw 地址避免 CDN 的分支缓存延迟；热修复只需修改 rules/*.list。
   const CUSTOM_RULE_BASE =
-    "https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/";
+    "https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/rules/";
   const customDomainProvider = (file) => ({
     type: "http",
     behavior: "domain",

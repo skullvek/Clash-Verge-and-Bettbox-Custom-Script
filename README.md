@@ -1,6 +1,6 @@
 <div align="center">
 
-# Clash Verge Rev / Bettbox / FlClash Custom Script
+# Mihomo RouteKit
 
 **为 Clash Verge Rev、Bettbox 与 FlClash 提供一套可迁移、可控、面向 Mihomo 的统一分流脚本。**
 
@@ -10,7 +10,7 @@
 [![Bettbox](https://img.shields.io/badge/Bettbox%20Android-v1.18.8%2B-3ddc84)](./Bettbox-mihomoScript.js)
 [![FlClash](https://img.shields.io/badge/FlClash-支持-5b6ee1)](./FlClash-mihomoScript.js)
 [![Mihomo](https://img.shields.io/badge/内核-Mihomo-orange)](https://github.com/MetaCubeX/mihomo)
-[![Validate scripts](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml/badge.svg)](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/actions/workflows/validate.yml)
+[![Validate scripts](https://github.com/skullvek/Mihomo-RouteKit/actions/workflows/validate.yml/badge.svg)](https://github.com/skullvek/Mihomo-RouteKit/actions/workflows/validate.yml)
 
 [快速开始](#快速开始) · [仓库目录](#仓库目录与日常维护) · [代理组架构](#代理组架构) · [分流规则](#分流规则) · [DNS](#dns-设计) · [客户端差异](#客户端差异) · [常见问题](#注意事项)
 
@@ -125,7 +125,7 @@
 4. 在标题为 **脚本** 的管理页面，点击右上角 **＋ → 通过URL导入**，粘贴下面的地址；也可选择「通过文件导入」，或选择「从零开始」后粘贴 [`FlClash-mihomoScript.js`](./FlClash-mihomoScript.js) 全文保存。
 
    ```text
-   https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/FlClash-mihomoScript.js
+   https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/FlClash-mihomoScript.js
    ```
 
 5. 导入完成后，返回该订阅的扩展页面，**选中刚保存的脚本**，确认其显示选中状态，再返回并重新应用配置。只保存脚本、未绑定订阅不会生效。
@@ -142,9 +142,9 @@ FlClash 不读取 Bettbox 的 13 个可视化开关，因此此版本固定启�
 ### Raw 地址
 
 ```text
-https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/Clash-Verge-Rev-mihomoScript.js
-https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/Bettbox-mihomoScript.js
-https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/FlClash-mihomoScript.js
+https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/Clash-Verge-Rev-mihomoScript.js
+https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/Bettbox-mihomoScript.js
+https://raw.githubusercontent.com/skullvek/Mihomo-RouteKit/main/FlClash-mihomoScript.js
 ```
 
 > Raw 地址适合复制或同步脚本源码。脚本更新后，需要重新加载 / 刷新对应覆写，客户端才会使用新版本。
@@ -420,7 +420,7 @@ Bettbox 中关闭某个服务开关后：
 | 文件 | Provider | 用途 |
 | --- | --- | --- |
 | [`rules/direct.list`](./rules/direct.list) | `SKULL_CustomDirect` | 上游误判的国内域名直连；初始收录 `chatglm.cn` |
-| [`rules/proxy.list`](./rules/proxy.list) | `SKULL_CustomProxy` | 上游误判或遗漏的代理域名；收录 `+.workbuddy.ai`，覆盖海外版主域及全部子域 |
+| [`rules/proxy.list`](./rules/proxy.list) | `SKULL_CustomProxy` | 国内厂商的国际服务与关联资源例外；覆盖 AI、办公、影音和国际云接口，见下表 |
 | [`rules/fake-ip-filter.list`](./rules/fake-ip-filter.list) | `SKULL_FakeIPFilter` | 追加 Fake-IP 兼容排除；初始为 NTP 与 Microsoft 联网检测 |
 
 三个文件使用 **域名文本格式**，每行只写域名，不写 `DOMAIN-SUFFIX,`、策略组或 YAML `payload:`：
@@ -438,9 +438,23 @@ api.example.net
 在运行时规则 URL 正确指向本仓库的前提下，补丁内容更新只需修改 `rules/*.list`，无需调整分流脚本逻辑。提交后等待内核下一轮更新，或在客户端执行规则集更新；**这不是即时推送**。已有缓存时保留最近成功下载的内容；远端不可达且无缓存时，补丁不能生效。
 
 > [!IMPORTANT]
-> **仓库地址迁移：** 三版脚本的 `CUSTOM_RULE_BASE` 均使用当前 `skullvek` 地址。Clash Verge Rev / Bettbox 的旧脚本仍可能读取 `hh1848` 路径，请更新脚本并重新应用配置，再更新规则集；只更新订阅或 README 不会改写旧脚本中的下载地址。
+> **仓库地址迁移：** 三版脚本的 `CUSTOM_RULE_BASE`、README 安装链接及校验断言均指向 `skullvek/Mihomo-RouteKit`。使用旧版脚本的用户请更新脚本并重新应用配置，再更新规则集；只更新订阅或 README 不会改写已导入脚本中的下载地址。
 
-**WorkBuddy 海外版直连修复：** `workbuddy.ai`（含 `www.workbuddy.ai` 等子域）通过 `SKULL_CustomProxy` 优先于 `SKULL_China` 匹配，业务流量与 DNS 均经 `国外流量`。不包含国内版 `workbuddy.cn`，也不整体代理腾讯公共域名。FlClash 现有脚本无需重新导入：在规则集页面更新 `SKULL_CustomProxy`，确认下载成功，再断开旧连接并重新打开网页。预期连接记录显示 `RuleSet(SKULL_CustomProxy) → 国外流量`；若仍为 `SKULL_China → DIRECT`，检查规则缓存和最终配置中的下载 URL。
+**国际服务直连修复（2026-10-22）：** 部分域名既被上游 CN 分类收录，又属于国际服务；另有 Qoder、MiniMax、Moonshot、TikTok/PikPak 关联域名同时存在于 CN 和 Foreign 集合。由于 CN 规则在前，这些域名原本会提前直连。现在由 `SKULL_CustomProxy` 优先接管，业务流量与 DNS 均经 `国外流量`，三版保持相同策略。
+
+| 范围 | 代理补丁覆盖 |
+| --- | --- |
+| AI / 开发 | WorkBuddy、CodeBuddy 国际站；Qoder 官网及 `qoder.sh` API；Qwen 的 `qwen.ai` / `qwenlm.ai` / `qwenlm.io`；Z.ai；MiniMax 的 `minimax.io`；Moonshot 的 `moonshot.ai` |
+| TRAE 国际版 | `trae.ai`、`traeapi.us`，及精确主机 `trae-api-sg.mchost.guru` |
+| Coze 国际版 | `coze.com` 与 `cozecdn.com` |
+| 办公 / 协作 | Lark 的 `larksuite.com` / `larksuitecdn.com` / `larkoffice.com`；`wps.com` / `wpsoffice.com`；`voovmeeting.com` |
+| 创作 / 影音 | `klingai.com`、`wetv.vip`、`iq.com`、`bilibili.tv`、`joox.com` |
+| 关联资源 | `tiktokrow-cdn.com`、`pikpakdrive.com`、`pikpak.me` |
+| 国际云 | `alibabacloud.com`、`tencentcloud.com`；精确主机 `dashscope-intl.aliyuncs.com` / `dashscope-us.aliyuncs.com`；新加坡 / 东京业务空间的 `ap-southeast-1.maas.aliyuncs.com` / `ap-northeast-1.maas.aliyuncs.com` 子域 |
+
+补丁不整体代理 `mchost.guru`、`aliyuncs.com`、`tencentcloudapi.com` 等共享父域；`workbuddy.cn`、`copilot.tencent.com`、`qoder.cn`、`trae.com.cn`、`coze.cn`、`chatglm.cn`、`bigmodel.cn`、`minimaxi.com`、`moonshot.cn`、`wps.cn` 及北京地域百炼接口继续按正常规则处理。可灵的国内 / 全球页面若共用 `klingai.com` 下的同一主机，也会一起经代理；域名规则不能按 URL 路径区分版本。新增资源域名是对已筛查范围的例外，不代表完整覆盖每个应用将来使用的全部 CDN。
+
+**客户端更新：** 更新三版对应脚本至 `2026.10.22-r2` 并重新应用配置，再在规则集页面更新 `SKULL_CustomProxy`，确认下载成功后断开旧连接并重试。预期连接记录显示 `RuleSet(SKULL_CustomProxy) → 国外流量`；若仍为 `SKULL_China → DIRECT`，检查当前生效配置、规则缓存及下载 URL。已有旧脚本仅更新补丁也可获得这些域名修复，但仍建议迁移至新仓库地址。
 
 如将脚本迁移到其他仓库，也应同时发布规则文件并修改对应 JS 中的 `CUSTOM_RULE_BASE`；只复制 JS 不会自动改为读取新位置的补丁。
 
@@ -829,7 +843,7 @@ DNS 层三版均设置 `ipv6: false`；Bettbox 另外写入顶层 `ipv6: false`�
 GitHub Actions 在 push、pull request 和手动触发时运行：
 
 - 三份 JS 的语法检查，以及合成订阅中的内联节点、provider-only、混合、重名、旧组依赖与拨号循环场景
-- Rule Provider / 策略组 / DNS 引用完整性、下载 URL 结构与本仓库文件映射、规则文件格式及冲突
+- Rule Provider / 策略组 / DNS 引用完整性、下载 URL 结构与本仓库文件映射、规则文件格式及冲突；国际服务域名覆盖、共享父域与国内版的排除边界
 - AI 与国外流量的代理约束、Microsoft / Apple / 游戏平台的 `default-selected: DIRECT`、漏网之鱼默认出口和三端一致性
 - Bettbox 的 13 个单独开关及全部关闭场景；FlClash 的客户端字段保留、NTP、当前仓库补丁与跨端规则一致性；真实 QuickJS 引擎与 Node 的输出对照
 
@@ -850,7 +864,7 @@ python tests/quickjs_check.py
 
 ## 问题反馈
 
-如果遇到脚本不生效、节点分类错误、规则命中异常或 DNS 行为异常，可通过 [GitHub Issues](https://github.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/issues) 反馈。
+如果遇到脚本不生效、节点分类错误、规则命中异常或 DNS 行为异常，可通过 [GitHub Issues](https://github.com/skullvek/Mihomo-RouteKit/issues) 反馈。
 
 建议同时提供：
 
