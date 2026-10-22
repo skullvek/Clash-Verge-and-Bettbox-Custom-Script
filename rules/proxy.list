@@ -1,3 +1,5 @@
 # Domain/text: add confirmed proxy-required domains as +.domain (apex + subdomains).
-# Intentionally empty until an upstream omission is confirmed.
 # LAN and AI routes remain protected; direct.list wins if both lists match.
+
+# WorkBuddy international: override CN classification for the site and subdomains.
++.workbuddy.ai

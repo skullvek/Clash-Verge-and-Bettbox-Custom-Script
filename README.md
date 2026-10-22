@@ -420,7 +420,7 @@ Bettbox 中关闭某个服务开关后：
 | 文件 | Provider | 用途 |
 | --- | --- | --- |
 | [`rules/direct.list`](./rules/direct.list) | `SKULL_CustomDirect` | 上游误判的国内域名直连；初始收录 `chatglm.cn` |
-| [`rules/proxy.list`](./rules/proxy.list) | `SKULL_CustomProxy` | 上游遗漏的代理域名；初始仅注释，无活动规则 |
+| [`rules/proxy.list`](./rules/proxy.list) | `SKULL_CustomProxy` | 上游误判或遗漏的代理域名；收录 `+.workbuddy.ai`，覆盖海外版主域及全部子域 |
 | [`rules/fake-ip-filter.list`](./rules/fake-ip-filter.list) | `SKULL_FakeIPFilter` | 追加 Fake-IP 兼容排除；初始为 NTP 与 Microsoft 联网检测 |
 
 三个文件使用 **域名文本格式**，每行只写域名，不写 `DOMAIN-SUFFIX,`、策略组或 YAML `payload:`：
@@ -438,7 +438,9 @@ api.example.net
 在运行时规则 URL 正确指向本仓库的前提下，补丁内容更新只需修改 `rules/*.list`，无需调整分流脚本逻辑。提交后等待内核下一轮更新，或在客户端执行规则集更新；**这不是即时推送**。已有缓存时保留最近成功下载的内容；远端不可达且无缓存时，补丁不能生效。
 
 > [!IMPORTANT]
-> **仓库地址迁移注意：** Clash Verge Rev 与 Bettbox 两份 JS 的 `CUSTOM_RULE_BASE` 仍指向旧账号路径 `https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/rules/`，而当前仓库地址是 `skullvek/Clash-Verge-and-Bettbox-Custom-Script`。本文档入口已使用新地址，但**只更新 README 不会改变运行时规则下载 URL**。如果规则更新失败，或编辑本仓库的 `rules/*.list` 后未生效，请先检查最终配置中 `SKULL_CustomDirect`、`SKULL_CustomProxy`、`SKULL_FakeIPFilter` 的 `url` 及下载日志。FlClash 新版已使用当前 `skullvek` 地址。迁移另两版运行时 URL 需要同步修改对应 JS 的 `CUSTOM_RULE_BASE` 和相关测试断言；不要仅修改 README。
+> **仓库地址迁移：** 三版脚本的 `CUSTOM_RULE_BASE` 均使用当前 `skullvek` 地址。Clash Verge Rev / Bettbox 的旧脚本仍可能读取 `hh1848` 路径，请更新脚本并重新应用配置，再更新规则集；只更新订阅或 README 不会改写旧脚本中的下载地址。
+
+**WorkBuddy 海外版直连修复：** `workbuddy.ai`（含 `www.workbuddy.ai` 等子域）通过 `SKULL_CustomProxy` 优先于 `SKULL_China` 匹配，业务流量与 DNS 均经 `国外流量`。不包含国内版 `workbuddy.cn`，也不整体代理腾讯公共域名。FlClash 现有脚本无需重新导入：在规则集页面更新 `SKULL_CustomProxy`，确认下载成功，再断开旧连接并重新打开网页。预期连接记录显示 `RuleSet(SKULL_CustomProxy) → 国外流量`；若仍为 `SKULL_China → DIRECT`，检查规则缓存和最终配置中的下载 URL。
 
 如将脚本迁移到其他仓库，也应同时发布规则文件并修改对应 JS 中的 `CUSTOM_RULE_BASE`；只复制 JS 不会自动改为读取新位置的补丁。
 
@@ -621,7 +623,7 @@ Netflix
 | Fake-IP Filter | 补丁 + blacklist + 基础项 + Windows 检测 | 补丁 + blacklist + 基础项 | 同 Clash Verge Rev |
 | 系统校时直连 | 按原有域名 / IP 规则 | pool 域名与 UDP/123 直连，pool 使用国内 DoH | 同 Bettbox |
 | 选择持久化 | `profile.store-selected` | `profile.store-selected` | App 保存并恢复选择，客户端设 `store-selected: false` |
-| 自维护补丁 URL | 旧 `hh1848` 路径 | 旧 `hh1848` 路径 | 当前 `skullvek` 路径 |
+| 自维护补丁 URL | 当前 `skullvek` 路径 | 当前 `skullvek` 路径 | 当前 `skullvek` 路径 |
 
 客户端会在脚本执行之后继续应用自身设置，最终生效值应结合 App 和订阅覆写检查。
 

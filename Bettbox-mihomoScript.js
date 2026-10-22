@@ -38,7 +38,7 @@ var serviceConfigs = [
 ];
 
 // Bettbox Android 全局覆写脚本
-// Version: 2026.10.04-r1
+// Version: 2026.10.22-r1
 // 目标：国内直连、国外代理；AI 强制代理；常用国际服务独立；地区聚合（自动测速 + 手动节点）。
 // 用法：设置 -> 高级设置 -> 脚本；配置 -> 订阅 -> 覆写 -> 脚本。
 
@@ -352,7 +352,7 @@ function main(config) {
   // 自维护的小型域名补丁：domain/text 同时支持分流和 DNS rule-set 引用。
   // 使用 Raw 地址避免 CDN 的分支缓存延迟；热修复只需修改 rules/*.list。
   const CUSTOM_RULE_BASE =
-    "https://raw.githubusercontent.com/hh1848/Clash-Verge-and-Bettbox-Custom-Script/main/rules/";
+    "https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/";
   const customDomainProvider = (file) => ({
     type: "http",
     behavior: "domain",

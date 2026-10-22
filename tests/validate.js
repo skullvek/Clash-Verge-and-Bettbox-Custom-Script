@@ -140,8 +140,7 @@ for (const file of SCRIPTS) {
     for (const [name, leaf] of [['SKULL_CustomDirect', 'direct.list'], ['SKULL_CustomProxy', 'proxy.list'], ['SKULL_FakeIPFilter', 'fake-ip-filter.list']]) {
       const p = c['rule-providers'][name];
       assert.equal(p.behavior, 'domain'); assert.equal(p.format, 'text');
-      const owner = file.startsWith('FlClash') ? 'skullvek' : 'hh1848';
-      assert.equal(p.url, `https://raw.githubusercontent.com/${owner}/Clash-Verge-and-Bettbox-Custom-Script/main/rules/` + leaf);
+      assert.equal(p.url, 'https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/' + leaf);
       assert.equal(p.proxy, '国外流量');
     }
   });
@@ -274,7 +273,7 @@ test('self-maintained rule files match their domain/text provider declarations',
   const config = execute(SCRIPTS[0], fixture('direct-proxies'));
   const lists = {};
   for (const [name, p] of Object.entries(config['rule-providers'])) {
-    if (!p.url.includes('/hh1848/')) continue;
+    if (!p.url.startsWith('https://raw.githubusercontent.com/skullvek/Clash-Verge-and-Bettbox-Custom-Script/main/rules/')) continue;
     const relative = new URL(p.url).pathname.split('/main/')[1];
     assert.ok(relative && relative.startsWith('rules/'));
     const text = fs.readFileSync(path.join(ROOT, relative), 'utf8');
